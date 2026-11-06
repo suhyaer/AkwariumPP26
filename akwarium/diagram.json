@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "author": "Akwarium",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "ds1",
+      "top": -90,
+      "left": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -40,
+      "left": 100,
+      "attrs": {
+        "value": "4700"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 120,
+      "left": 200,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 150,
+      "left": 280,
+      "attrs": {
+        "color": "red"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_tds",
+      "top": 280,
+      "left": 120,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_turb",
+      "top": 280,
+      "left": 260,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_press",
+      "top": 280,
+      "left": 400,
+      "attrs": {}
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled",
+      "top": -200,
+      "left": 330,
+      "attrs": {
+        "i2cAddress": "0x3c"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_light",
+      "top": 280,
+      "left": 540,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "esp:3V3",
+      "ds1:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.1",
+      "ds1:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:4",
+      "ds1:DQ",
+      "green",
+      []
+    ],
+    [
+      "r1:1",
+      "ds1:VCC",
+      "red",
+      []
+    ],
+    [
+      "r1:2",
+      "ds1:DQ",
+      "green",
+      []
+    ],
+    [
+      "esp:25",
+      "r2:1",
+      "orange",
+      []
+    ],
+    [
+      "r2:2",
+      "led1:A",
+      "orange",
+      []
+    ],
+    [
+      "led1:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_tds:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot_tds:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_tds:SIG",
+      "esp:32",
+      "blue",
+      []
+    ],
+    [
+      "pot_turb:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot_turb:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_turb:SIG",
+      "esp:33",
+      "purple",
+      []
+    ],
+    [
+      "pot_press:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot_press:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_press:SIG",
+      "esp:34",
+      "gold",
+      []
+    ],
+    [
+      "oled:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "oled:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "oled:SCL",
+      "esp:22",
+      "yellow",
+      []
+    ],
+    [
+      "oled:SDA",
+      "esp:21",
+      "blue",
+      []
+    ],
+    [
+      "pot_light:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot_light:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_light:SIG",
+      "esp:35",
+      "orange",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

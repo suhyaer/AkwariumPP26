@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Akwarium</title>
+<style>
+:root{
+  --bg:#fff;--cell:#f5f5f5;--line:#cfcfcf;--ink:#151515;--mut:#6b6b6b;
+  --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,Menlo,"DejaVu Sans Mono",monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;font:15px/1.45 var(--sans);color:var(--ink);background:var(--bg)}
+.page{max-width:780px;margin:0 auto;padding:28px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:16px}
+h1{margin:0;font-size:21px;font-weight:600;letter-spacing:-.01em}
+#conn{font:12px var(--mono);color:var(--mut);text-align:right}
+#alerts:empty{display:none}
+#alerts{margin-bottom:16px}
+.alert{background:var(--ink);color:#fff;padding:8px 12px;margin-bottom:4px;font-size:14px;
+  border-radius:3px;animation:in .2s ease-out}
+.alert:before{content:"! ";font-family:var(--mono);font-weight:700}
+@keyframes in{from{opacity:0}to{opacity:1}}
+.panel{border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.cell{background:var(--cell);padding:14px 16px 15px;border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);min-height:104px}
+.grid .cell:nth-child(3n){border-right:0}
+h2{margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.v{font:500 30px/1.1 var(--mono);letter-spacing:-.02em}
+.u{font:13px var(--mono);color:var(--mut);margin-left:5px;letter-spacing:0}
+.sub{font:12px var(--mono);color:var(--mut);margin-top:8px}
+.badge{display:inline-block;font:600 13px var(--mono);letter-spacing:.04em;padding:3px 10px;
+  border:1px solid var(--ink);border-radius:2px;background:transparent;color:var(--ink)}
+.badge.on{background:var(--ink);color:#fff}
+.ctl{padding:16px;border-bottom:1px solid var(--line)}
+.ctl h2{margin-bottom:10px}
+form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input{width:84px;padding:7px 8px;font:16px var(--mono);color:var(--ink);background:#fff;
+  border:1px solid #8a8a8a;border-radius:3px}
+input:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+.unit{font:14px var(--mono);color:var(--mut)}
+button{padding:8px 16px;font:600 14px var(--sans);color:#fff;background:var(--ink);
+  border:1px solid var(--ink);border-radius:3px;cursor:pointer;transition:background .12s}
+button:hover{background:#3a3a3a}
+button:active{background:#000}
+#msg{font:13px var(--mono)}
+.note{font-size:12px;color:var(--mut);margin-top:10px}
+.foot{padding:10px 16px;font:12px var(--mono);color:var(--mut);background:var(--cell)}
+@media (max-width:640px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .grid .cell:nth-child(3n){border-right:1px solid var(--line)}
+  .grid .cell:nth-child(2n){border-right:0}
+}
+@media (max-width:360px){
+  .grid{grid-template-columns:1fr}
+  .grid .cell{border-right:0!important}
+}
+@media (prefers-reduced-motion:reduce){.alert{animation:none}button{transition:none}}
+</style></head><body>
+<div class="page">
+<header><h1>Akwarium</h1><span id="conn"></span></header>
+<div id="alerts"></div>
+<div class="panel">
+<div class="grid">
+<div class="cell"><h2>Temperatura</h2><div class="v"><span id="temp">—</span><span class="u">°C</span></div>
+<div class="sub">zadana: <span id="target">—</span> °C</div></div>
+<div class="cell"><h2>Grzałka</h2><span id="heater" class="badge">—</span></div>
+<div class="cell"><h2>TDS</h2><div class="v"><span id="tds">—</span><span class="u">ppm</span></div>
+<div class="sub"><span id="tdsMv">—</span> mV</div></div>
+<div class="cell"><h2>Przejrzystość</h2><div class="v"><span id="clarity">—</span><span class="u">%</span></div>
+<div class="sub">czujnik <span id="turbV">—</span> V</div></div>
+<div class="cell"><h2>Światło</h2><div class="v"><span id="lux">—</span><span class="u">lx</span></div></div>
+<div class="cell"><h2>Napowietrzanie</h2><div class="v"><span id="pressure">—</span><span class="u">kPa</span></div></div>
+</div>
+<div class="ctl"><h2>Temperatura zadana</h2>
+<form onsubmit="setTarget();return false">
+<input id="t" type="number" step="0.1" min="15" max="32" required>
+<span class="unit">°C</span><button type="submit">Ustaw</button><span id="msg"></span></form>
+<div class="note">Dozwolony zakres: 15–32 °C. Wartość jest zapamiętywana w urządzeniu.</div></div>
+<div class="foot">Wi-Fi: <span id="rssi">—</span> dBm · czas pracy: <span id="up">—</span></div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const isFile=location.protocol==='file:';
+const demo={temp:24.62,tempOk:true,target:25,heater:true,tds:412,tdsMv:1230,clarity:87,turbV:3.57,lux:5200,lightOk:true,pressure:5.2,pressureOk:true,wifiRssi:-58,uptime:3723,alarms:['turbid']};
+const f=(x,d)=>(x===null||x===undefined)?'—':Number(x).toFixed(d);
+function render(s){
+  $('temp').textContent=f(s.temp,1); $('target').textContent=f(s.target,1);
+  $('tds').textContent=f(s.tds,0); $('tdsMv').textContent=f(s.tdsMv,0);
+  $('clarity').textContent=f(s.clarity,0); $('turbV').textContent=f(s.turbV,2);
+  $('lux').textContent=f(s.lux,0); $('pressure').textContent=f(s.pressure,1);
+  $('rssi').textContent=s.wifiRssi;
+  const h=Math.floor(s.uptime/3600), m=Math.floor(s.uptime%3600/60);
+  $('up').textContent=h+' h '+m+' min';
+  const hb=$('heater'); hb.textContent=s.heater?'WŁĄCZONA':'WYŁĄCZONA'; hb.className='badge'+(s.heater?' on':'');
+  const AL={temp_sensor:'Brak odczytu temperatury — grzałka wyłączona',temp_high:'Temperatura za wysoka',
+    temp_low:'Temperatura za niska od dłuższego czasu',aeration_low:'Brak napowietrzania (zbyt niskie ciśnienie)',
+    aeration_high:'Napowietrzanie zablokowane (zbyt wysokie ciśnienie)',turbid:'Woda mętna',tds_high:'Zbyt wysokie TDS',
+    pressure_sensor:'Brak odczytu czujnika ciśnienia',light_sensor:'Brak odczytu czujnika światła'};
+  const a=(s.alarms||[]).map(c=>AL[c]||c);
+  $('alerts').innerHTML=a.map(x=>'<div class="alert">'+x+'</div>').join('');
+  if(!$('t').dataset.init){ $('t').value=Number(s.target).toFixed(1); $('t').dataset.init=1; }
+}
+async function poll(){
+  try{
+    const s=isFile?demo:await (await fetch('/api/status',{cache:'no-store'})).json();
+    render(s); $('conn').textContent=isFile?'podgląd offline (dane demo)':'';
+  }catch(e){ $('conn').textContent='Brak połączenia z urządzeniem'; }
+}
+async function setTarget(){
+  const v=$('t').value;
+  if(isFile){ $('msg').textContent='Podgląd offline — brak urządzenia'; return; }
+  try{
+    const r=await fetch('/api/target?value='+encodeURIComponent(v),{method:'POST'});
+    const j=await r.json();
+    $('msg').textContent=j.ok?('Ustawiono '+Number(j.target).toFixed(1)+' °C'):('Błąd: '+j.error);
+    poll();
+  }catch(e){ $('msg').textContent='Błąd połączenia'; }
+}
+poll(); setInterval(poll,2000);
+</script></body></html>
